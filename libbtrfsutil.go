@@ -29,6 +29,7 @@ import (
 	"unsafe"
 )
 
+// SubvolumeInfo is a representation of a Btrfs subvolume or snapshot.   
 type subvolumeInfo struct {
 	id            uint64
 	parent_id     uint64
@@ -78,6 +79,7 @@ func StrError(errInt uint32) error {
 	return nil
 }
 
+// Sync forces a sync on a specific Btrfs filesystem.
 func Sync(path string) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -86,11 +88,13 @@ func Sync(path string) error {
 	return err
 }
 
+// See Sync.
 func SyncFd(fd int) error {
 	err := StrError(C.btrfs_util_sync_fd(C.int(fd)))
 	return err
 }
 
+// StartsSync starts a sync on a specific Btrfs filesystem but dose not wait for it.
 func StartSync(path string) (uint64, error) {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -101,6 +105,7 @@ func StartSync(path string) (uint64, error) {
 	return uint64(transid), err
 }
 
+// See StartSync.
 func StratSyncFd(fd int) (uint64, error) {
 	var transid C.uint64_t
 
@@ -108,6 +113,8 @@ func StratSyncFd(fd int) (uint64, error) {
 	return uint64(transid), err
 }
 
+// WaitSync waits for a transaction with a given ID to sync.
+// If the given ID is zero, WaitSync waits for the current transaction.
 func WaitSync(path string, transid uint64) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -118,12 +125,14 @@ func WaitSync(path string, transid uint64) error {
 	return err
 }
 
+// See WaitSync.
 func WaitSyncFd(fd int, transid uint64) error {
 	tid := C.uint64_t(transid)
 	err := StrError(C.btrfs_util_wait_sync_fd(C.int(fd), tid))
 	return err
 }
 
+// IsSubvolume returns whether a given path is a Btrfs subvolume.
 func IsSubvolume(path string) (bool, error) {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -134,6 +143,7 @@ func IsSubvolume(path string) (bool, error) {
 	return false, err
 }
 
+// See IsSubvolume.
 func IsSubvolumeFd(fd int) (bool, error) {
 	err := StrError(C.btrfs_util_is_subvolume_fd(C.int(fd)))
 	if err == nil {
@@ -142,6 +152,7 @@ func IsSubvolumeFd(fd int) (bool, error) {
 	return false, err
 }
 
+// SubvolumeId returns the ID of the subvolume containing a given path.
 func SubvolumeId(path string) (uint64, error) {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -151,12 +162,14 @@ func SubvolumeId(path string) (uint64, error) {
 	return uint64(id_ret), err
 }
 
+// See SubvolumeId.
 func SubvolumeIdFd(fd int) (uint64, error) {
 	var id_ret C.uint64_t
 	err := StrError(C.btrfs_util_subvolume_id_fd(C.int(fd), &id_ret))
 	return uint64(id_ret), err
 }
 
+// SubvolumePath returns the path of the subvolume with a given ID.
 func SubvolumePath(path string, id uint64) (string, error) {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -168,6 +181,7 @@ func SubvolumePath(path string, id uint64) (string, error) {
 	return C.GoString(path_ret), err
 }
 
+// See SubvolumePath.
 func SubvolumePathFd(fd int, id uint64) (string, error) {
 	var path_ret *C.char
 	defer C.free(unsafe.Pointer(path_ret))
@@ -175,6 +189,10 @@ func SubvolumePathFd(fd int, id uint64) (string, error) {
 	return C.GoString(path_ret), err
 }
 
+// SubvolumeInfo returns information about a subvolume with a given ID or path.
+// The given path may be any path in the Btrfs filesystem; it dose not have to
+// refer to a subvolume unless id is zero. If the given ID is zero,
+// the subvolume ID of the subvolume containing path is used.
 func SubvolumeInfo(path string, id uint64) (subvolumeInfo, error) {
 	var info C.struct_btrfs_util_subvolume_info
 
@@ -185,6 +203,7 @@ func SubvolumeInfo(path string, id uint64) (subvolumeInfo, error) {
 	return newSubvolumeInfo(&info), err
 }
 
+// See SubvolumeInfo.
 func SubvolumeInfoFd(fd int, id uint64) (subvolumeInfo, error) {
 	var info C.struct_btrfs_util_subvolume_info
 
@@ -192,6 +211,7 @@ func SubvolumeInfoFd(fd int, id uint64) (subvolumeInfo, error) {
 	return newSubvolumeInfo(&info), err
 }
 
+// GetSubvolumeReadOnly returns whether a subvolume is read-only.
 func GetSubvolumeReadOnly(path string) (bool, error) {
 	var ret C.bool
 
@@ -202,6 +222,7 @@ func GetSubvolumeReadOnly(path string) (bool, error) {
 	return bool(ret), err
 }
 
+// See GetSubvolumeReadOnly.
 func GetSubvolumeReadOnlyFd(fd int) (bool, error) {
 	var ret C.bool
 
@@ -209,6 +230,7 @@ func GetSubvolumeReadOnlyFd(fd int) (bool, error) {
 	return bool(ret), err
 }
 
+// SetSubvolumeReadOnly sets whether a subvolume is read-only.
 func SetSubvolumeReadOnly(path string, read_only bool) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -217,10 +239,13 @@ func SetSubvolumeReadOnly(path string, read_only bool) error {
 	return err
 }
 
+// See SetSubvolumeReadOnly.
 func SetSubvolumeReadOnlyFd(fd int, read_only bool) error {
 	err := StrError(C.btrfs_util_set_subvolume_read_only_fd(C.int(fd), C.bool(read_only)))
 	return err
 }
+
+// GetDefaultSubvolume returns the default subvolume ID for a filesystem.
 func GetDefaultSubvolume(path string) (uint64, error) {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -231,12 +256,17 @@ func GetDefaultSubvolume(path string) (uint64, error) {
 	return uint64(id_ret), err
 }
 
+// See GetDefaultSubvolume.
 func GetDefaultSubvolumeFd(fd int) (uint64, error) {
 	var id_ret C.uint64_t
 	err := StrError(C.btrfs_util_get_default_subvolume_fd(C.int(fd), &id_ret))
 	return uint64(id_ret), err
 }
 
+// SetDefaultSubvolume sets the default subvolume for a filesystem.
+// The given path may be any path in the Btrfs filesystem; it dose not have to
+// refer to a subvolume unless id is zero.
+// If the given ID is zero, the subvolume ID of the subvolume containing path is used.
 func SetDefaultSubvolume(path string, id uint64) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -245,11 +275,14 @@ func SetDefaultSubvolume(path string, id uint64) error {
 	return err
 }
 
+// See SetDefaultSubvolume.
 func SetDefaultSubvolumeFd(fd int, id uint64) error {
 	err := StrError(C.btrfs_util_set_default_subvolume_fd(C.int(fd), C.uint64_t(id)))
 	return err
 }
 
+// CreateSubvolume creates a new subvolume under a given path, with Qgroups to inherit from.
+// qgroup_inherit can be nil if the new subvolume should not inherit any Qgroups.
 func CreateSubvolume(path string, qgroup_inherit *QgroupInherit) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -258,6 +291,8 @@ func CreateSubvolume(path string, qgroup_inherit *QgroupInherit) error {
 	return err
 }
 
+// CreateSubvolumeFd creates a new subvolume given its parent, a name and Qgroups to inherit from.
+// qgroup_inherit can be nil if the new subvolume should not inherit any Qgroups.
 func CreateSubvolumeFd(parent_fd int, name string, qgroup_inherit *QgroupInherit) error {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
@@ -266,6 +301,8 @@ func CreateSubvolumeFd(parent_fd int, name string, qgroup_inherit *QgroupInherit
 	return err
 }
 
+// CreateSnapshot creates a new snapshot from a source subvolume path.
+// qgroup_inherit can be nil if the new subvolume should not inherit any Qgroups.
 func CreateSnapshot(source string, path string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
 	Csource := C.CString(source)
 	defer C.free(unsafe.Pointer(Csource))
@@ -287,6 +324,7 @@ func CreateSnapshot(source string, path string, recursive bool, read_only bool, 
 	return err
 }
 
+// See CreateSnapshot.
 func CreateSnapshotFd(fd int, path string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -305,6 +343,8 @@ func CreateSnapshotFd(fd int, path string, recursive bool, read_only bool, qgrou
 	return err
 }
 
+// CreateSnapshotFd2 creates a new snapshot form a source subvolume file descriptor and a target parent file descriptor and name.
+// qgroup_inherit can be nil if the new subvolume should not inherit any Qgroups.
 func CreateSnapshotFd2(fd int, parent_fd int, name string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
@@ -323,6 +363,10 @@ func CreateSnapshotFd2(fd int, parent_fd int, name string, recursive bool, read_
 	return err
 }
 
+// DeleteSubvolume deletes a subvolume or snapshot.
+// If recursive is set subvolumes beneath the given subvolume will be deleted befor
+// attempting to delete the given subvolume.
+// Unless the filesystem is mounted with 'user_subvol_rm_allow', appropriate privileges are required (CAP_SYS_ADMIN).
 func DeleteSubvolume(path string, recursive bool) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -337,6 +381,8 @@ func DeleteSubvolume(path string, recursive bool) error {
 	return err
 }
 
+// DeleteSubvolumeFd deletes a subvolume or snapshot by its parent file descriptor and name.
+// See DeleteSubvolume.
 func DeleteSubvolumeFd(parent_fd int, name string, recursive bool) error {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
@@ -351,11 +397,14 @@ func DeleteSubvolumeFd(parent_fd int, name string, recursive bool) error {
 	return err
 }
 
+// DeleteSubvolumeByIdFd deletes a subvolume or snapshot by its parent file descriptor and id.
+// See DeleteSubvolume
 func DeleteSubvolumeByIdFd(parent_fd int, subvolid uint64) error {
 	err := StrError(C.btrfs_util_delete_subvolume_by_id_fd(C.int(parent_fd), C.uint64_t(subvolid)))
 	return err
 }
 
+// DeletedSubvolumes returns a list of subvolume IDs which have been deleted but not yet cleaned up.
 func DeletedSubvolumes(path string) ([]uint64, error) {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
@@ -374,6 +423,7 @@ func DeletedSubvolumes(path string) ([]uint64, error) {
 	return ids, err
 }
 
+// See DeletedSubvolumesFd.
 func DeletedSubvolumesFd(fd int) ([]uint64, error) {
 	var n C.size_t
 	var Cids *C.uint64_t

@@ -44,6 +44,14 @@ type SubvolumeIteratorInfo struct {
 	info subvolumeInfo
 }
 
+// CreateSubvolumeIterator creates an iterator over subvolumes in a Btrfs filesystem.
+// Lists all subvolumes beneath (but not including) the subvolume with the ID top.
+// The given path may be any path in the Btrfs filesystem; it dose not have to
+// refer to a subvolume unless top is zero. If the as top given ID is zero,
+// the subvolume ID of the subvolume containing path is used.
+// By default subvolumes are listed pre-order e.g., foo will be yielded befor foo/bar.
+// This behavior can be reversed by setting post_order.
+// The returnd SubvolumeIterator struct must be freed with Destroy().
 func CreateSubvolumeIterator(path string, top uint64, post_order bool) (*SubvolumeIterator, error) {
 	it := new(SubvolumeIterator)
 
@@ -60,6 +68,7 @@ func CreateSubvolumeIterator(path string, top uint64, post_order bool) (*Subvolu
 	return it, err
 }
 
+// See CreateSubvolumeIterator.
 func CreateSubvolumeIteratorFd(fd int, top uint64, post_order bool) (*SubvolumeIterator, error) {
 	it := new(SubvolumeIterator)
 
@@ -72,10 +81,12 @@ func CreateSubvolumeIteratorFd(fd int, top uint64, post_order bool) (*SubvolumeI
 	return it, err
 }
 
+// Destroy destroyes the SubvolumeIterator.
 func (it SubvolumeIterator) Destroy() {
 	C.btrfs_util_destroy_subvolume_iterator(it.iterator)
 }
 
+// Next gets the next SubvolumeIteratorData from a SubvolumeIterator.
 func (it SubvolumeIterator) Next() <-chan SubvolumeIteratorData {
 	ch := make(chan SubvolumeIteratorData)
 	var Cpath *C.char
@@ -101,6 +112,7 @@ func (it SubvolumeIterator) Next() <-chan SubvolumeIteratorData {
 	return ch
 }
 
+// NextInfo gets the next SubvolumeIteratorInfo from a SubvolumeIterator.
 func (it SubvolumeIterator) NextInfo() <-chan SubvolumeIteratorInfo {
 	ch := make(chan SubvolumeIteratorInfo)
 	var Cpath *C.char

@@ -27,25 +27,31 @@ import (
 	"unsafe"
 )
 
+// QgroupInherit is the qgroup inheritance specifier for SubvolumeCreate or SubvolumeSnapshot.
 type QgroupInherit struct {
 	inherit *C.struct_btrfs_util_qgroup_inherit
 }
 
+// NewQgroupInherit creates a qgroup inheritance specifier.
+// The returnd QgroupInherit struct must be freed with Destroy().
 func NewQgroupInherit() (*QgroupInherit, error) {
 	q := new(QgroupInherit)
 	err := StrError(C.btrfs_util_create_qgroup_inherit(0, &q.inherit))
 	return q, err
 }
 
+// Destroy destroyes the qgroup inheritance specifier.
 func (q QgroupInherit) Destroy() {
 	C.btrfs_util_destroy_qgroup_inherit(q.inherit)
 }
 
+// AddGroup adds an inheritance from a qgroup with the given ID to a qgroup inheritance specifier.
 func (q QgroupInherit) AddGroup(groupid uint64) error {
 	err := StrError(C.btrfs_util_qgroup_inherit_add_group(&q.inherit, C.uint64_t(groupid)))
 	return err
 }
 
+// GetGroups returs the qgroup IDs contained in a qgroup inheritance specifier.
 func (q QgroupInherit) GetGroups() []uint64 {
 	var n C.size_t
 	var Cgroups *C.uint64_t
