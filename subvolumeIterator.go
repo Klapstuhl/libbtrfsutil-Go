@@ -44,7 +44,7 @@ type SubvolumeIteratorInfo struct {
 	info subvolumeInfo
 }
 
-func CreateSubvolumeInterator(path string, top uint64, post_order bool) (*SubvolumeIterator, error) {
+func CreateSubvolumeIterator(path string, top uint64, post_order bool) (*SubvolumeIterator, error) {
 	it := new(SubvolumeIterator)
 
 	Cpath := C.CString(path)
@@ -60,7 +60,7 @@ func CreateSubvolumeInterator(path string, top uint64, post_order bool) (*Subvol
 	return it, err
 }
 
-func CreateSubvolumeInteratorFd(fd int, top uint64, post_order bool) (*SubvolumeIterator, error) {
+func CreateSubvolumeIteratorFd(fd int, top uint64, post_order bool) (*SubvolumeIterator, error) {
 	it := new(SubvolumeIterator)
 
 	flags := 0
