@@ -272,9 +272,13 @@ func SetDefaultSubvolumeFd(fd int, id uint64) error {
 	return err
 }
 
-// CreateSubvolume creates a new subvolume under a given path, with Qgroups to inherit from.
-// qgroup_inherit can be nil if the new subvolume should not inherit any Qgroups.
-func CreateSubvolume(path string, qgroup_inherit *QgroupInherit) error {
+// CreateSubvolume creates a new subvolume under a given path.
+func CreateSubvolume(path string) error {
+	return CreateSubvolumeWithQgroup(path, &QgroupInherit{})
+}
+
+// CreateSubvolumeWithQgroup creates a new subvolume under a given path, with Qgroups to inherit from.
+func CreateSubvolumeWithQgroup(path string, qgroup_inherit *QgroupInherit) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
 
@@ -282,9 +286,12 @@ func CreateSubvolume(path string, qgroup_inherit *QgroupInherit) error {
 	return err
 }
 
-// CreateSubvolumeFd creates a new subvolume given its parent, a name and Qgroups to inherit from.
-// qgroup_inherit can be nil if the new subvolume should not inherit any Qgroups.
-func CreateSubvolumeFd(parent_fd int, name string, qgroup_inherit *QgroupInherit) error {
+func CreateSubvolumeFd(parent_fd int, name string) error {
+	return CreateSubvolumeWithQgroupFd(parent_fd, name, &QgroupInherit{})
+}
+
+// CreateSubvolumeWithQgroupFd creates a new subvolume given its parent file descriptor, a name and Qgroups to inherit from.
+func CreateSubvolumeWithQgroupFd(parent_fd int, name string, qgroup_inherit *QgroupInherit) error {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
 
@@ -293,8 +300,12 @@ func CreateSubvolumeFd(parent_fd int, name string, qgroup_inherit *QgroupInherit
 }
 
 // CreateSnapshot creates a new snapshot from a source subvolume path.
-// qgroup_inherit can be nil if the new subvolume should not inherit any Qgroups.
-func CreateSnapshot(source string, path string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
+func CreateSnapshot(source string, path string, recursive bool, read_only bool) error {
+	return CreateSnapshotWithQgroup(source, path, recursive, read_only, &QgroupInherit{})
+}
+
+// CreateSnapshotWithQgroup creates a new snapshot from a source subvolume path with Qgroups to inherit from.
+func CreateSnapshotWithQgroup(source string, path string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
 	Csource := C.CString(source)
 	defer C.free(unsafe.Pointer(Csource))
 
@@ -315,8 +326,13 @@ func CreateSnapshot(source string, path string, recursive bool, read_only bool, 
 	return err
 }
 
-// See CreateSnapshot.
-func CreateSnapshotFd(fd int, path string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
+// See CreateSnapshot
+func CreateSnapshotFd(fd int, path string, recursive bool, read_only bool) error {
+	return CreateSnapshotWithQgroupFd(fd, path, recursive, read_only, &QgroupInherit{})
+}
+
+// See CreateSnapshotWithQgroup.
+func CreateSnapshotWithQgroupFd(fd int, path string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
 
@@ -334,9 +350,14 @@ func CreateSnapshotFd(fd int, path string, recursive bool, read_only bool, qgrou
 	return err
 }
 
-// CreateSnapshotFd2 creates a new snapshot form a source subvolume file descriptor and a target parent file descriptor and name.
-// qgroup_inherit can be nil if the new subvolume should not inherit any Qgroups.
-func CreateSnapshotFd2(fd int, parent_fd int, name string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
+// CreateSnapshotFd2 creates a new snapshot form a source subvolume file descriptor, a target parent file descriptor and name.
+func CreateSnapshotFd2(fd int, parent_fd int, name string, recursive bool, read_only bool) error {
+	return CreateSnapshotWithQgroupFd2(fd, parent_fd, name, recursive, read_only, &QgroupInherit{})
+}
+
+// CreateSnapshotWithQgroupFd2 creates a new snapshot form a source subvolume file descriptor, a target parent file descriptor and name,
+// with Qgroups to inherit from.
+func CreateSnapshotWithQgroupFd2(fd int, parent_fd int, name string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
 
