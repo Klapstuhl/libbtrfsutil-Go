@@ -29,7 +29,7 @@ import (
 )
 
 // SubvolumeInfo is a representation of a Btrfs subvolume or snapshot.
-type subvolumeInfo struct {
+type SubvolumeInfo struct {
 	id            uint64
 	parent_id     uint64
 	dir_id        uint64
@@ -48,8 +48,8 @@ type subvolumeInfo struct {
 	rtime         time.Time
 }
 
-func newSubvolumeInfo(info *C.struct_btrfs_util_subvolume_info) subvolumeInfo {
-	subvol := subvolumeInfo{
+func newSubvolumeInfo(info *C.struct_btrfs_util_subvolume_info) SubvolumeInfo {
+	subvol := SubvolumeInfo{
 		id:            uint64(info.id),
 		parent_id:     uint64(info.parent_id),
 		dir_id:        uint64(info.dir_id),
@@ -180,11 +180,11 @@ func SubvolumePathFd(fd int, id uint64) (string, error) {
 	return C.GoString(path_ret), err
 }
 
-// SubvolumeInfo returns information about a subvolume with a given ID or path.
+// GetSubvolumeInfo returns information about a subvolume with a given ID or path.
 // The given path may be any path in the Btrfs filesystem; it dose not have to
 // refer to a subvolume unless id is zero. If the given ID is zero,
 // the subvolume ID of the subvolume containing path is used.
-func SubvolumeInfo(path string, id uint64) (subvolumeInfo, error) {
+func GetSubvolumeInfo(path string, id uint64) (SubvolumeInfo, error) {
 	var info C.struct_btrfs_util_subvolume_info
 
 	Cpath := C.CString(path)
@@ -194,8 +194,8 @@ func SubvolumeInfo(path string, id uint64) (subvolumeInfo, error) {
 	return newSubvolumeInfo(&info), err
 }
 
-// See SubvolumeInfo.
-func SubvolumeInfoFd(fd int, id uint64) (subvolumeInfo, error) {
+// See GetSubvolumeInfo.
+func GetSubvolumeInfoFd(fd int, id uint64) (SubvolumeInfo, error) {
 	var info C.struct_btrfs_util_subvolume_info
 
 	err := getError(C.btrfs_util_subvolume_info_fd(C.int(fd), C.uint64_t(id), &info))

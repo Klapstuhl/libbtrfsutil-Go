@@ -41,7 +41,7 @@ type SubvolumeIteratorData struct {
 type SubvolumeIteratorInfo struct {
 	err  error
 	path string
-	info subvolumeInfo
+	info SubvolumeInfo
 }
 
 // CreateSubvolumeIterator creates an iterator over subvolumes in a Btrfs filesystem.
