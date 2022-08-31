@@ -63,7 +63,7 @@ func CreateSubvolumeIterator(path string, top uint64, post_order bool) (*Subvolu
 		flags |= C.BTRFS_UTIL_SUBVOLUME_ITERATOR_POST_ORDER
 	}
 
-	err := StrError(C.btrfs_util_create_subvolume_iterator(Cpath, C.uint64_t(top), C.int(flags), &it.iterator))
+	err := getError(C.btrfs_util_create_subvolume_iterator(Cpath, C.uint64_t(top), C.int(flags), &it.iterator))
 	it.fd = int(C.btrfs_util_subvolume_iterator_fd(it.iterator))
 	return it, err
 }
@@ -77,7 +77,7 @@ func CreateSubvolumeIteratorFd(fd int, top uint64, post_order bool) (*SubvolumeI
 		flags |= C.BTRFS_UTIL_SUBVOLUME_ITERATOR_POST_ORDER
 	}
 
-	err := StrError(C.btrfs_util_create_subvolume_iterator_fd(C.int(fd), C.uint64_t(top), C.int(flags), &it.iterator))
+	err := getError(C.btrfs_util_create_subvolume_iterator_fd(C.int(fd), C.uint64_t(top), C.int(flags), &it.iterator))
 	return it, err
 }
 
@@ -101,7 +101,7 @@ func (it SubvolumeIterator) Next() <-chan SubvolumeIteratorData {
 				break
 			}
 			ch <- SubvolumeIteratorData{
-				err:  StrError(err_id),
+				err:  getError(err_id),
 				path: C.GoString(Cpath),
 				id:   uint64(id),
 			}
@@ -127,7 +127,7 @@ func (it SubvolumeIterator) NextInfo() <-chan SubvolumeIteratorInfo {
 				break
 			}
 			ch <- SubvolumeIteratorInfo{
-				err:  StrError(err_id),
+				err:  getError(err_id),
 				path: C.GoString(Cpath),
 				info: newSubvolumeInfo(&info),
 			}
