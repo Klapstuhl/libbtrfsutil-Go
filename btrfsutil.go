@@ -130,8 +130,6 @@ func IsSubvolume(path string) (bool, error) {
 	err := getError(C.btrfs_util_is_subvolume(Cpath))
 	if err == nil {
 		return true, err
-	} else if err == ErrNotBtrfs || err == ErrNotSubvolume {
-		return false, nil
 	}
 	return false, err
 }
@@ -141,8 +139,6 @@ func IsSubvolumeFd(fd int) (bool, error) {
 	err := getError(C.btrfs_util_is_subvolume_fd(C.int(fd)))
 	if err == nil {
 		return true, err
-	} else if err == ErrNotBtrfs || err == ErrNotSubvolume {
-		return false, nil
 	}
 	return false, err
 }
