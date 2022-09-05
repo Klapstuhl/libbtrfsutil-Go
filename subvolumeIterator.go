@@ -17,7 +17,7 @@
  * along with libbtrfsutil-go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package libbtrfsutil
+package btrfsutil
 
 // #cgo LDFLAGS: -lbtrfsutil
 // #include <stdlib.h>
@@ -33,15 +33,15 @@ type SubvolumeIterator struct {
 }
 
 type SubvolumeIteratorData struct {
-	err  error
 	path string
 	id   uint64
+	err  error
 }
 
 type SubvolumeIteratorInfo struct {
-	err  error
 	path string
 	info SubvolumeInfo
+	err  error
 }
 
 // CreateSubvolumeIterator creates an iterator over subvolumes in a Btrfs filesystem.
@@ -101,9 +101,9 @@ func (it SubvolumeIterator) Next() <-chan SubvolumeIteratorData {
 				break
 			}
 			ch <- SubvolumeIteratorData{
-				err:  getError(err_id),
 				path: C.GoString(Cpath),
 				id:   uint64(id),
+				err:  getError(err_id),
 			}
 			C.free(unsafe.Pointer(Cpath))
 		}

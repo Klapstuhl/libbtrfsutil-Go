@@ -1,4 +1,4 @@
-package libbtrfsutil
+package btrfsutil
 
 import "errors"
 

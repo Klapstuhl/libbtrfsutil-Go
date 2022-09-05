@@ -17,7 +17,7 @@
  * along with libbtrfsutil-go.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package libbtrfsutil
+package btrfsutil
 
 // #cgo LDFLAGS: -lbtrfsutil
 // #include <stdlib.h>
