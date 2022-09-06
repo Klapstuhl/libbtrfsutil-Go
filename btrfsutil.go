@@ -30,42 +30,42 @@ import (
 
 // SubvolumeInfo is a representation of a Btrfs subvolume or snapshot.
 type SubvolumeInfo struct {
-	id            uint64
-	parent_id     uint64
-	dir_id        uint64
-	flags         uint64
-	uuid          []uint8
-	parent_uuid   []uint8
-	received_uuid []uint8
-	generation    uint64
-	ctransid      uint64
-	otransid      uint64
-	stransid      uint64
-	rtransid      uint64
-	ctime         time.Time
-	otime         time.Time
-	stime         time.Time
-	rtime         time.Time
+	Id           uint64
+	ParentId     uint64
+	DirId        uint64
+	Flags        uint64
+	UUID         []uint8
+	ParentUUID   []uint8
+	ReceivedUUID []uint8
+	Generation   uint64
+	Ctransid     uint64
+	Otransid     uint64
+	Stransid     uint64
+	Rtransid     uint64
+	Ctime        time.Time
+	Otime        time.Time
+	Stime        time.Time
+	Rtime        time.Time
 }
 
 func newSubvolumeInfo(info *C.struct_btrfs_util_subvolume_info) SubvolumeInfo {
 	subvol := SubvolumeInfo{
-		id:            uint64(info.id),
-		parent_id:     uint64(info.parent_id),
-		dir_id:        uint64(info.dir_id),
-		flags:         uint64(info.flags),
-		uuid:          (*[16]uint8)(unsafe.Pointer(&info.uuid))[:16:16],
-		parent_uuid:   (*[16]uint8)(unsafe.Pointer(&info.parent_uuid))[:16:16],
-		received_uuid: (*[16]uint8)(unsafe.Pointer(&info.received_uuid))[:16:16],
-		generation:    uint64(info.generation),
-		ctransid:      uint64(info.ctransid),
-		otransid:      uint64(info.otransid),
-		stransid:      uint64(info.stransid),
-		rtransid:      uint64(info.rtransid),
-		ctime:         time.Unix(int64(info.ctime.tv_sec), int64(info.ctime.tv_nsec)),
-		otime:         time.Unix(int64(info.otime.tv_sec), int64(info.otime.tv_nsec)),
-		stime:         time.Unix(int64(info.stime.tv_sec), int64(info.stime.tv_nsec)),
-		rtime:         time.Unix(int64(info.rtime.tv_sec), int64(info.rtime.tv_nsec)),
+		Id:           uint64(info.id),
+		ParentId:     uint64(info.parent_id),
+		DirId:        uint64(info.dir_id),
+		Flags:        uint64(info.flags),
+		UUID:         (*[16]uint8)(unsafe.Pointer(&info.uuid))[:16:16],
+		ParentUUID:   (*[16]uint8)(unsafe.Pointer(&info.parent_uuid))[:16:16],
+		ReceivedUUID: (*[16]uint8)(unsafe.Pointer(&info.received_uuid))[:16:16],
+		Generation:   uint64(info.generation),
+		Ctransid:     uint64(info.ctransid),
+		Otransid:     uint64(info.otransid),
+		Stransid:     uint64(info.stransid),
+		Rtransid:     uint64(info.rtransid),
+		Ctime:        time.Unix(int64(info.ctime.tv_sec), int64(info.ctime.tv_nsec)),
+		Otime:        time.Unix(int64(info.otime.tv_sec), int64(info.otime.tv_nsec)),
+		Stime:        time.Unix(int64(info.stime.tv_sec), int64(info.stime.tv_nsec)),
+		Rtime:        time.Unix(int64(info.rtime.tv_sec), int64(info.rtime.tv_nsec)),
 	}
 	return subvol
 }
