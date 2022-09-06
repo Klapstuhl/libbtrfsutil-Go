@@ -300,6 +300,7 @@ func CreateSubvolumeWithQgroupFd(parent_fd int, name string, qgroup_inherit *Qgr
 }
 
 // CreateSnapshot creates a new snapshot from a source subvolume path.
+// If source is not a subvolume the subvolume containing source will be snapshotted
 func CreateSnapshot(source string, path string, recursive bool, read_only bool) error {
 	return CreateSnapshotWithQgroup(source, path, recursive, read_only, &QgroupInherit{})
 }
