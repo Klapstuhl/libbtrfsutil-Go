@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install btrfs-progs -y
+      run: sudo apt-get update && sudo apt-get install btrfs-progs libbtrfsutil-dev -y
 
     - name: Set up Go
       uses: actions/setup-go@v3
