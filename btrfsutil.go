@@ -48,7 +48,7 @@ type SubvolumeInfo struct {
 	Rtime        time.Time
 }
 
-func newSubvolumeInfo(info *C.struct_btrfs_util_subvolume_info) SubvolumeInfo {
+func newSubvolumeInfo(info *C.struct_btrfs_util_subvolume_info) *SubvolumeInfo {
 	subvol := SubvolumeInfo{
 		Id:           uint64(info.id),
 		ParentId:     uint64(info.parent_id),
@@ -67,7 +67,7 @@ func newSubvolumeInfo(info *C.struct_btrfs_util_subvolume_info) SubvolumeInfo {
 		Stime:        time.Unix(int64(info.stime.tv_sec), int64(info.stime.tv_nsec)),
 		Rtime:        time.Unix(int64(info.rtime.tv_sec), int64(info.rtime.tv_nsec)),
 	}
-	return subvol
+	return &subvol
 }
 
 // Sync forces a sync on a specific Btrfs filesystem.
@@ -184,22 +184,28 @@ func SubvolumePathFd(fd int, id uint64) (string, error) {
 // The given path may be any path in the Btrfs filesystem; it dose not have to
 // refer to a subvolume unless id is zero. If the given ID is zero,
 // the subvolume ID of the subvolume containing path is used.
-func GetSubvolumeInfo(path string, id uint64) (SubvolumeInfo, error) {
+func GetSubvolumeInfo(path string, id uint64) (*SubvolumeInfo, error) {
 	var info C.struct_btrfs_util_subvolume_info
 
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
 
 	err := getError(C.btrfs_util_subvolume_info(Cpath, C.uint64_t(id), &info))
-	return newSubvolumeInfo(&info), err
+	if err != nil {
+		return nil, err
+	}
+	return newSubvolumeInfo(&info), nil
 }
 
 // See GetSubvolumeInfo.
-func GetSubvolumeInfoFd(fd int, id uint64) (SubvolumeInfo, error) {
+func GetSubvolumeInfoFd(fd int, id uint64) (*SubvolumeInfo, error) {
 	var info C.struct_btrfs_util_subvolume_info
 
 	err := getError(C.btrfs_util_subvolume_info_fd(C.int(fd), C.uint64_t(id), &info))
-	return newSubvolumeInfo(&info), err
+	if err != nil {
+		return nil, err
+	}
+	return newSubvolumeInfo(&info), nil
 }
 
 // GetSubvolumeReadOnly returns whether a subvolume is read-only.
