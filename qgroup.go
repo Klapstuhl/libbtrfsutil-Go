@@ -32,9 +32,9 @@ type QgroupInherit struct {
 	inherit *C.struct_btrfs_util_qgroup_inherit
 }
 
-// NewQgroupInherit creates a qgroup inheritance specifier.
+// CreateQgroupInherit creates a qgroup inheritance specifier.
 // The returnd QgroupInherit struct must be freed with Destroy().
-func NewQgroupInherit() (*QgroupInherit, error) {
+func CreateQgroupInherit() (*QgroupInherit, error) {
 	q := new(QgroupInherit)
 	err := getError(C.btrfs_util_create_qgroup_inherit(0, &q.inherit))
 	return q, err
@@ -43,6 +43,7 @@ func NewQgroupInherit() (*QgroupInherit, error) {
 // Destroy destroyes the qgroup inheritance specifier.
 func (q QgroupInherit) Destroy() {
 	C.btrfs_util_destroy_qgroup_inherit(q.inherit)
+	q.inherit = nil
 }
 
 // AddGroup adds an inheritance from a qgroup with the given ID to a qgroup inheritance specifier.
