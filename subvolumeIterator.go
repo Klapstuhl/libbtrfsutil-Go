@@ -29,19 +29,6 @@ import (
 
 type SubvolumeIterator struct {
 	iterator *C.struct_btrfs_util_subvolume_iterator
-	fd       int
-}
-
-type SubvolumeIteratorData struct {
-	path string
-	id   uint64
-	err  error
-}
-
-type SubvolumeIteratorInfo struct {
-	path string
-	info SubvolumeInfo
-	err  error
 }
 
 // CreateSubvolumeIterator creates an iterator over subvolumes in a Btrfs filesystem.
@@ -64,7 +51,6 @@ func CreateSubvolumeIterator(path string, top uint64, post_order bool) (*Subvolu
 	}
 
 	err := getError(C.btrfs_util_create_subvolume_iterator(Cpath, C.uint64_t(top), C.int(flags), &it.iterator))
-	it.fd = int(C.btrfs_util_subvolume_iterator_fd(it.iterator))
 	return it, err
 }
 
@@ -81,59 +67,42 @@ func CreateSubvolumeIteratorFd(fd int, top uint64, post_order bool) (*SubvolumeI
 	return it, err
 }
 
+// Fd returns the file descriptor referencing the SubvolumeIterator
+func (it *SubvolumeIterator) Fd() uintptr {
+	return uintptr(C.btrfs_util_subvolume_iterator_fd(it.iterator))
+}
+
 // Destroy destroyes the SubvolumeIterator.
-func (it SubvolumeIterator) Destroy() {
+func (it *SubvolumeIterator) Destroy() {
 	C.btrfs_util_destroy_subvolume_iterator(it.iterator)
+	it.iterator = nil
 }
 
 // Next gets the next SubvolumeIteratorData from a SubvolumeIterator.
-func (it SubvolumeIterator) Next() <-chan SubvolumeIteratorData {
-	ch := make(chan SubvolumeIteratorData)
+func (it *SubvolumeIterator) Next() (string, uint64, error) {
 	var Cpath *C.char
 	defer C.free(unsafe.Pointer(Cpath))
 
 	var id C.uint64_t
+	err := getError(C.btrfs_util_subvolume_iterator_next(it.iterator, &Cpath, &id))
+	if err != nil {
+		return "", 0, err
+	}
 
-	go func() {
-		for {
-			err_id := C.btrfs_util_subvolume_iterator_next(it.iterator, &Cpath, &id)
-			if err_id == 1 {
-				break
-			}
-			ch <- SubvolumeIteratorData{
-				path: C.GoString(Cpath),
-				id:   uint64(id),
-				err:  getError(err_id),
-			}
-			C.free(unsafe.Pointer(Cpath))
-		}
-		close(ch)
-	}()
-	return ch
+	return C.GoString(Cpath), uint64(id), err
 }
 
 // NextInfo gets the next SubvolumeIteratorInfo from a SubvolumeIterator.
-func (it SubvolumeIterator) NextInfo() <-chan SubvolumeIteratorInfo {
-	ch := make(chan SubvolumeIteratorInfo)
+func (it *SubvolumeIterator) NextInfo() (string, *SubvolumeInfo, error) {
 	var Cpath *C.char
 	defer C.free(unsafe.Pointer(Cpath))
 
 	var info C.struct_btrfs_util_subvolume_info
+	err := getError(C.btrfs_util_subvolume_iterator_next_info(it.iterator, &Cpath, &info))
+	if err != nil {
+		return "", nil, err
+	}
 
-	go func() {
-		for {
-			err_id := C.btrfs_util_subvolume_iterator_next_info(it.iterator, &Cpath, &info)
-			if err_id == 1 {
-				break
-			}
-			ch <- SubvolumeIteratorInfo{
-				err:  getError(err_id),
-				path: C.GoString(Cpath),
-				info: newSubvolumeInfo(&info),
-			}
-			C.free(unsafe.Pointer(Cpath))
-		}
-		close(ch)
-	}()
-	return ch
+	return C.GoString(Cpath), newSubvolumeInfo(&info), nil
+
 }
