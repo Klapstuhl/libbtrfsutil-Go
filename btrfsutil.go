@@ -80,7 +80,7 @@ func Sync(path string) error {
 }
 
 // See Sync.
-func SyncFd(fd int) error {
+func SyncFd(fd uintptr) error {
 	err := getError(C.btrfs_util_sync_fd(C.int(fd)))
 	return err
 }
@@ -97,7 +97,7 @@ func StartSync(path string) (uint64, error) {
 }
 
 // See StartSync.
-func StratSyncFd(fd int) (uint64, error) {
+func StratSyncFd(fd uintptr) (uint64, error) {
 	var transid C.uint64_t
 
 	err := getError(C.btrfs_util_start_sync_fd(C.int(fd), &transid))
@@ -117,7 +117,7 @@ func WaitSync(path string, transid uint64) error {
 }
 
 // See WaitSync.
-func WaitSyncFd(fd int, transid uint64) error {
+func WaitSyncFd(fd uintptr, transid uint64) error {
 	tid := C.uint64_t(transid)
 	err := getError(C.btrfs_util_wait_sync_fd(C.int(fd), tid))
 	return err
@@ -135,7 +135,7 @@ func IsSubvolume(path string) (bool, error) {
 }
 
 // See IsSubvolume.
-func IsSubvolumeFd(fd int) (bool, error) {
+func IsSubvolumeFd(fd uintptr) (bool, error) {
 	err := getError(C.btrfs_util_is_subvolume_fd(C.int(fd)))
 	if err == nil {
 		return true, err
@@ -154,7 +154,7 @@ func SubvolumeId(path string) (uint64, error) {
 }
 
 // See SubvolumeId.
-func SubvolumeIdFd(fd int) (uint64, error) {
+func SubvolumeIdFd(fd uintptr) (uint64, error) {
 	var id_ret C.uint64_t
 	err := getError(C.btrfs_util_subvolume_id_fd(C.int(fd), &id_ret))
 	return uint64(id_ret), err
@@ -173,7 +173,7 @@ func SubvolumePath(path string, id uint64) (string, error) {
 }
 
 // See SubvolumePath.
-func SubvolumePathFd(fd int, id uint64) (string, error) {
+func SubvolumePathFd(fd uintptr, id uint64) (string, error) {
 	var path_ret *C.char
 	defer C.free(unsafe.Pointer(path_ret))
 	err := getError(C.btrfs_util_subvolume_path_fd(C.int(fd), C.uint64_t(id), &path_ret))
@@ -198,7 +198,7 @@ func GetSubvolumeInfo(path string, id uint64) (*SubvolumeInfo, error) {
 }
 
 // See GetSubvolumeInfo.
-func GetSubvolumeInfoFd(fd int, id uint64) (*SubvolumeInfo, error) {
+func GetSubvolumeInfoFd(fd uintptr, id uint64) (*SubvolumeInfo, error) {
 	var info C.struct_btrfs_util_subvolume_info
 
 	err := getError(C.btrfs_util_subvolume_info_fd(C.int(fd), C.uint64_t(id), &info))
@@ -220,7 +220,7 @@ func GetSubvolumeReadOnly(path string) (bool, error) {
 }
 
 // See GetSubvolumeReadOnly.
-func GetSubvolumeReadOnlyFd(fd int) (bool, error) {
+func GetSubvolumeReadOnlyFd(fd uintptr) (bool, error) {
 	var ret C.bool
 
 	err := getError(C.btrfs_util_get_subvolume_read_only_fd(C.int(fd), &ret))
@@ -237,7 +237,7 @@ func SetSubvolumeReadOnly(path string, read_only bool) error {
 }
 
 // See SetSubvolumeReadOnly.
-func SetSubvolumeReadOnlyFd(fd int, read_only bool) error {
+func SetSubvolumeReadOnlyFd(fd uintptr, read_only bool) error {
 	err := getError(C.btrfs_util_set_subvolume_read_only_fd(C.int(fd), C.bool(read_only)))
 	return err
 }
@@ -254,7 +254,7 @@ func GetDefaultSubvolume(path string) (uint64, error) {
 }
 
 // See GetDefaultSubvolume.
-func GetDefaultSubvolumeFd(fd int) (uint64, error) {
+func GetDefaultSubvolumeFd(fd uintptr) (uint64, error) {
 	var id_ret C.uint64_t
 	err := getError(C.btrfs_util_get_default_subvolume_fd(C.int(fd), &id_ret))
 	return uint64(id_ret), err
@@ -273,7 +273,7 @@ func SetDefaultSubvolume(path string, id uint64) error {
 }
 
 // See SetDefaultSubvolume.
-func SetDefaultSubvolumeFd(fd int, id uint64) error {
+func SetDefaultSubvolumeFd(fd uintptr, id uint64) error {
 	err := getError(C.btrfs_util_set_default_subvolume_fd(C.int(fd), C.uint64_t(id)))
 	return err
 }
@@ -292,12 +292,12 @@ func CreateSubvolumeWithQgroup(path string, qgroup_inherit *QgroupInherit) error
 	return err
 }
 
-func CreateSubvolumeFd(parent_fd int, name string) error {
+func CreateSubvolumeFd(parent_fd uintptr, name string) error {
 	return CreateSubvolumeWithQgroupFd(parent_fd, name, &QgroupInherit{})
 }
 
 // CreateSubvolumeWithQgroupFd creates a new subvolume given its parent file descriptor, a name and Qgroups to inherit from.
-func CreateSubvolumeWithQgroupFd(parent_fd int, name string, qgroup_inherit *QgroupInherit) error {
+func CreateSubvolumeWithQgroupFd(parent_fd uintptr, name string, qgroup_inherit *QgroupInherit) error {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
 
@@ -334,12 +334,12 @@ func CreateSnapshotWithQgroup(source string, path string, recursive bool, read_o
 }
 
 // See CreateSnapshot
-func CreateSnapshotFd(fd int, path string, recursive bool, read_only bool) error {
+func CreateSnapshotFd(fd uintptr, path string, recursive bool, read_only bool) error {
 	return CreateSnapshotWithQgroupFd(fd, path, recursive, read_only, &QgroupInherit{})
 }
 
 // See CreateSnapshotWithQgroup.
-func CreateSnapshotWithQgroupFd(fd int, path string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
+func CreateSnapshotWithQgroupFd(fd uintptr, path string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
 	Cpath := C.CString(path)
 	defer C.free(unsafe.Pointer(Cpath))
 
@@ -358,13 +358,13 @@ func CreateSnapshotWithQgroupFd(fd int, path string, recursive bool, read_only b
 }
 
 // CreateSnapshotFd2 creates a new snapshot form a source subvolume file descriptor, a target parent file descriptor and name.
-func CreateSnapshotFd2(fd int, parent_fd int, name string, recursive bool, read_only bool) error {
+func CreateSnapshotFd2(fd uintptr, parent_fd uintptr, name string, recursive bool, read_only bool) error {
 	return CreateSnapshotWithQgroupFd2(fd, parent_fd, name, recursive, read_only, &QgroupInherit{})
 }
 
 // CreateSnapshotWithQgroupFd2 creates a new snapshot form a source subvolume file descriptor, a target parent file descriptor and name,
 // with Qgroups to inherit from.
-func CreateSnapshotWithQgroupFd2(fd int, parent_fd int, name string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
+func CreateSnapshotWithQgroupFd2(fd uintptr, parent_fd uintptr, name string, recursive bool, read_only bool, qgroup_inherit *QgroupInherit) error {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
 
@@ -402,7 +402,7 @@ func DeleteSubvolume(path string, recursive bool) error {
 
 // DeleteSubvolumeFd deletes a subvolume or snapshot by its parent file descriptor and name.
 // See DeleteSubvolume.
-func DeleteSubvolumeFd(parent_fd int, name string, recursive bool) error {
+func DeleteSubvolumeFd(parent_fd uintptr, name string, recursive bool) error {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
 
@@ -418,7 +418,7 @@ func DeleteSubvolumeFd(parent_fd int, name string, recursive bool) error {
 
 // DeleteSubvolumeByIdFd deletes a subvolume or snapshot by its parent file descriptor and id.
 // See DeleteSubvolume
-func DeleteSubvolumeByIdFd(parent_fd int, subvolid uint64) error {
+func DeleteSubvolumeByIdFd(parent_fd uintptr, subvolid uint64) error {
 	err := getError(C.btrfs_util_delete_subvolume_by_id_fd(C.int(parent_fd), C.uint64_t(subvolid)))
 	return err
 }
@@ -443,7 +443,7 @@ func DeletedSubvolumes(path string) ([]uint64, error) {
 }
 
 // See DeletedSubvolumesFd.
-func DeletedSubvolumesFd(fd int) ([]uint64, error) {
+func DeletedSubvolumesFd(fd uintptr) ([]uint64, error) {
 	var n C.size_t
 	var Cids *C.uint64_t
 	defer C.free(unsafe.Pointer(Cids))

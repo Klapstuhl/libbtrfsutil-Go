@@ -55,7 +55,7 @@ func CreateSubvolumeIterator(path string, top uint64, post_order bool) (*Subvolu
 }
 
 // See CreateSubvolumeIterator.
-func CreateSubvolumeIteratorFd(fd int, top uint64, post_order bool) (*SubvolumeIterator, error) {
+func CreateSubvolumeIteratorFd(fd uintptr, top uint64, post_order bool) (*SubvolumeIterator, error) {
 	it := new(SubvolumeIterator)
 
 	flags := 0
