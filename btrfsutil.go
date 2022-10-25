@@ -24,6 +24,7 @@ package btrfsutil
 // #include <btrfsutil.h>
 import "C"
 import (
+	"fmt"
 	"time"
 	"unsafe"
 )
@@ -34,9 +35,9 @@ type SubvolumeInfo struct {
 	ParentId     uint64
 	DirId        uint64
 	Flags        uint64
-	UUID         []uint8
-	ParentUUID   []uint8
-	ReceivedUUID []uint8
+	UUID         string
+	ParentUUID   string
+	ReceivedUUID string
 	Generation   uint64
 	Ctransid     uint64
 	Otransid     uint64
@@ -54,9 +55,9 @@ func newSubvolumeInfo(info *C.struct_btrfs_util_subvolume_info) *SubvolumeInfo {
 		ParentId:     uint64(info.parent_id),
 		DirId:        uint64(info.dir_id),
 		Flags:        uint64(info.flags),
-		UUID:         (*[16]uint8)(unsafe.Pointer(&info.uuid))[:16:16],
-		ParentUUID:   (*[16]uint8)(unsafe.Pointer(&info.parent_uuid))[:16:16],
-		ReceivedUUID: (*[16]uint8)(unsafe.Pointer(&info.received_uuid))[:16:16],
+		UUID:         uuidString(info.uuid),
+		ParentUUID:   uuidString(info.parent_uuid),
+		ReceivedUUID: uuidString(info.received_uuid),
 		Generation:   uint64(info.generation),
 		Ctransid:     uint64(info.ctransid),
 		Otransid:     uint64(info.otransid),
@@ -68,6 +69,10 @@ func newSubvolumeInfo(info *C.struct_btrfs_util_subvolume_info) *SubvolumeInfo {
 		Rtime:        time.Unix(int64(info.rtime.tv_sec), int64(info.rtime.tv_nsec)),
 	}
 	return &subvol
+}
+
+func uuidString(uuid [16]C.uchar) string {
+	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:16])
 }
 
 // Sync forces a sync on a specific Btrfs filesystem.
