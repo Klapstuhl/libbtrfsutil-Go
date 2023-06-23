@@ -79,9 +79,24 @@ var errorMap = map[uint32]error{
 	26: ErrFsInfoFailed,
 }
 
+var uintMap = func() map[error]uint32 {
+	m := make(map[error]uint32)
+	for key, value := range errorMap {
+		m[value] = key
+	}
+	return m
+}()
+
 func getError(errInt uint32) error {
 	if errInt != 0 {
 		return errorMap[errInt]
 	}
 	return nil
+}
+
+func GetCError(err error) uint32 {
+	if u, ok := uintMap[err]; ok {
+		return u
+	}
+	return 0
 }
