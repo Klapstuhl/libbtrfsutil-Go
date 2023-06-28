@@ -66,6 +66,46 @@ func TestCreateSubvolumeIterator(t *testing.T) {
 	}
 }
 
+func TestCreateSubvolumeInfoIterator(t *testing.T) {
+	if !hasPrivileges() {
+		t.Skipf("must be run as root")
+	}
+
+	mountpoint, err := mountBtrfs()
+	if err != nil {
+		t.Skip(err)
+	}
+	defer cleanup(mountpoint)
+
+	foo := filepath.Join(mountpoint.path, "foo")
+	os.Mkdir(foo, 0770)
+
+	type args struct {
+		path       string
+		top        uint64
+		post_order bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"<FS_TREE>", args{path: mountpoint.path, top: 0, post_order: false}, false},
+		{"foo", args{path: foo, top: 0, post_order: false}, true},
+		{"TOP=256", args{path: mountpoint.path, top: 256, post_order: false}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			iter, err := CreateSubvolumeInfoIterator(tt.args.path, tt.args.top, tt.args.post_order)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateSubvolumeInfoIterator() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			defer iter.Destroy()
+		})
+	}
+}
+
 func TestSubvolumeIterator(t *testing.T) {
 	if !hasPrivileges() {
 		t.Skipf("must be run as root")
@@ -134,7 +174,7 @@ func TestSubvolumeIterator(t *testing.T) {
 			false,
 		},
 	}
-	t.Run("Next", func(t *testing.T) {
+	t.Run("SubvolumeIterator", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				iter, err := CreateSubvolumeIterator(tt.args.path, tt.args.top, tt.args.post_order)
@@ -144,16 +184,13 @@ func TestSubvolumeIterator(t *testing.T) {
 				defer iter.Destroy()
 
 				var got []iterNext
-				for {
-					path, id, err := iter.Next()
-					if err == ErrStopIteration {
-						break
-					}
+				for iter.HasNext() {
+					result, err := iter.GetNext()
 					if (err != nil) != tt.wantErr {
-						t.Errorf("SubvolumeIterator.Next() error = %v, wantErr %v", err, tt.wantErr)
+						t.Errorf("SubvolumeIterator.GetNext() error = %v, wantErr %v", err, tt.wantErr)
 					}
 
-					got = append(got, iterNext{path, id})
+					got = append(got, iterNext{result.Path, result.Id})
 				}
 				if !reflect.DeepEqual(got, tt.want) {
 					t.Errorf("\n\tgot  %v\n\twant %v", got, tt.want)
@@ -161,26 +198,26 @@ func TestSubvolumeIterator(t *testing.T) {
 			})
 		}
 	})
-	t.Run("NextInfo", func(t *testing.T) {
+	t.Run("SubvolumeInfoIterator", func(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				iter, err := CreateSubvolumeIterator(tt.args.path, tt.args.top, tt.args.post_order)
+				iter, err := CreateSubvolumeInfoIterator(tt.args.path, tt.args.top, tt.args.post_order)
 				if (err != nil) != tt.wantErr {
-					t.Errorf("CreateSubvolumeIterator() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("CreateSubvolumeInfoIterator() error = %v, wantErr %v", err, tt.wantErr)
 				}
 				defer iter.Destroy()
 
 				var got []iterNext
-				for {
-					path, info, err := iter.NextInfo()
+				for iter.HasNext(){
+					result, err := iter.GetNext()
 					if err == ErrStopIteration {
 						break
 					}
 					if (err != nil) != tt.wantErr {
-						t.Errorf("SubvolumeIterator.NextInfo() error = %v, wantErr %v", err, tt.wantErr)
+						t.Errorf("SubvolumeInfoIterator.GetNext() error = %v, wantErr %v", err, tt.wantErr)
 					}
 
-					got = append(got, iterNext{path, info.Id})
+					got = append(got, iterNext{result.Path, result.Info.Id})
 				}
 				if !reflect.DeepEqual(got, tt.want) {
 					t.Errorf("\n\tgot  %v\n\twant %v", got, tt.want)

@@ -27,7 +27,20 @@ import (
 	"unsafe"
 )
 
+type SubvolumeIteratorResult struct {
+	Path string
+	Id   uint64
+}
+
+type SubvolumeInfoIteratorResult struct {
+	Path string
+	Info *SubvolumeInfo
+}
+
 type SubvolumeIterator struct {
+	lastResult *SubvolumeIteratorResult
+	lastErr    error
+
 	iterator *C.struct_btrfs_util_subvolume_iterator
 }
 
@@ -78,31 +91,99 @@ func (it *SubvolumeIterator) Destroy() {
 	it.iterator = nil
 }
 
-// Next gets the next SubvolumeIteratorData from a SubvolumeIterator.
-func (it *SubvolumeIterator) Next() (string, uint64, error) {
+// HasNext returns true if the SubvolumeIterator has a next value.
+func (it *SubvolumeIterator) HasNext() bool {
 	var Cpath *C.char
 	defer C.free(unsafe.Pointer(Cpath))
 
 	var id C.uint64_t
-	err := getError(C.btrfs_util_subvolume_iterator_next(it.iterator, &Cpath, &id))
-	if err != nil {
-		return "", 0, err
+	it.lastErr = getError(C.btrfs_util_subvolume_iterator_next(it.iterator, &Cpath, &id))
+	if it.lastErr == ErrStopIteration {
+		it.lastResult = nil
+		return false
 	}
 
-	return C.GoString(Cpath), uint64(id), err
+	it.lastResult = &SubvolumeIteratorResult{C.GoString(Cpath), uint64(id)}
+	return true
 }
 
-// NextInfo gets the next SubvolumeIteratorInfo from a SubvolumeIterator.
-func (it *SubvolumeIterator) NextInfo() (string, *SubvolumeInfo, error) {
+// GetNext gets the Path and Id of the next subvolume from a SubvolumeIterator.
+func (it *SubvolumeIterator) GetNext() (*SubvolumeIteratorResult, error) {
+	if it.lastErr != nil {
+		return nil, it.lastErr
+	}
+	return it.lastResult, it.lastErr
+}
+
+type SubvolumeInfoIterator struct {
+	lastResult *SubvolumeInfoIteratorResult
+	lastErr    error
+
+	iterator *C.struct_btrfs_util_subvolume_iterator
+}
+
+// Identical to CreateSubvolumeIterator but GetNext() returns a SubvolumeInfo insted of a subvolume Id.
+// The returnd SubvolumeInfoIterator struct must be freed with Destroy().
+func CreateSubvolumeInfoIterator(path string, top uint64, post_order bool) (*SubvolumeInfoIterator, error) {
+	it := new(SubvolumeInfoIterator)
+
+	Cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(Cpath))
+
+	flags := 0
+	if post_order {
+		flags |= C.BTRFS_UTIL_SUBVOLUME_ITERATOR_POST_ORDER
+	}
+
+	err := getError(C.btrfs_util_create_subvolume_iterator(Cpath, C.uint64_t(top), C.int(flags), &it.iterator))
+
+	return it, err
+}
+
+// See CreateSubvolumeInfoIterator.
+func CreateSubvolumeInfoIteratorFd(fd uintptr, top uint64, post_order bool) (*SubvolumeInfoIterator, error) {
+	it := new(SubvolumeInfoIterator)
+
+	flags := 0
+	if post_order {
+		flags |= C.BTRFS_UTIL_SUBVOLUME_ITERATOR_POST_ORDER
+	}
+
+	err := getError(C.btrfs_util_create_subvolume_iterator_fd(C.int(fd), C.uint64_t(top), C.int(flags), &it.iterator))
+	return it, err
+}
+
+// Fd returns the file descriptor referencing the SubvolumeInfoIterator
+func (it *SubvolumeInfoIterator) Fd() uintptr {
+	return uintptr(C.btrfs_util_subvolume_iterator_fd(it.iterator))
+}
+
+// Destroy destroyes the SubvolumeInfoIterator.
+func (it *SubvolumeInfoIterator) Destroy() {
+	C.btrfs_util_destroy_subvolume_iterator(it.iterator)
+	it.iterator = nil
+}
+
+// HasNext returns true if the SubvolumeInfoIterator has a next value.
+func (it *SubvolumeInfoIterator) HasNext() bool {
 	var Cpath *C.char
 	defer C.free(unsafe.Pointer(Cpath))
 
 	var info C.struct_btrfs_util_subvolume_info
-	err := getError(C.btrfs_util_subvolume_iterator_next_info(it.iterator, &Cpath, &info))
-	if err != nil {
-		return "", nil, err
+	it.lastErr = getError(C.btrfs_util_subvolume_iterator_next_info(it.iterator, &Cpath, &info))
+	if it.lastErr == ErrStopIteration {
+		it.lastResult = nil
+		return false
 	}
 
-	return C.GoString(Cpath), newSubvolumeInfo(&info), nil
+	it.lastResult = &SubvolumeInfoIteratorResult{C.GoString(Cpath), newSubvolumeInfo(&info)}
+	return true
+}
 
+// GetNext gets the Path and SubvolumeInfo of the next subvolume from a SubvolumeInfoIterator.
+func (it *SubvolumeInfoIterator) GetNext() (*SubvolumeInfoIteratorResult, error) {
+	if it.lastErr != nil {
+		return nil, it.lastErr
+	}
+	return it.lastResult, it.lastErr
 }
