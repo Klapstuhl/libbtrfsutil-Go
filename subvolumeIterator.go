@@ -49,9 +49,9 @@ type SubvolumeIterator struct {
 // The given path may be any path in the Btrfs filesystem; it dose not have to
 // refer to a subvolume unless top is zero. If the as top given ID is zero,
 // the subvolume ID of the subvolume containing path is used.
-// By default subvolumes are listed pre-order e.g., foo will be yielded befor foo/bar.
+// By default subvolumes are listed pre-order e.g., foo will be yielded before foo/bar.
 // This behavior can be reversed by setting post_order.
-// The returnd SubvolumeIterator struct must be freed with Destroy().
+// The returned SubvolumeIterator struct must be freed with Destroy().
 func CreateSubvolumeIterator(path string, top uint64, post_order bool) (*SubvolumeIterator, error) {
 	it := new(SubvolumeIterator)
 
@@ -85,7 +85,7 @@ func (it *SubvolumeIterator) Fd() uintptr {
 	return uintptr(C.btrfs_util_subvolume_iterator_fd(it.iterator))
 }
 
-// Destroy destroyes the SubvolumeIterator.
+// Destroy destroys the SubvolumeIterator.
 func (it *SubvolumeIterator) Destroy() {
 	C.btrfs_util_destroy_subvolume_iterator(it.iterator)
 	it.iterator = nil
@@ -122,8 +122,8 @@ type SubvolumeInfoIterator struct {
 	iterator *C.struct_btrfs_util_subvolume_iterator
 }
 
-// Identical to CreateSubvolumeIterator but GetNext() returns a SubvolumeInfo insted of a subvolume Id.
-// The returnd SubvolumeInfoIterator struct must be freed with Destroy().
+// Identical to CreateSubvolumeIterator but GetNext() returns a SubvolumeInfo instead of a subvolume Id.
+// The returned SubvolumeInfoIterator struct must be freed with Destroy().
 func CreateSubvolumeInfoIterator(path string, top uint64, post_order bool) (*SubvolumeInfoIterator, error) {
 	it := new(SubvolumeInfoIterator)
 
@@ -158,7 +158,7 @@ func (it *SubvolumeInfoIterator) Fd() uintptr {
 	return uintptr(C.btrfs_util_subvolume_iterator_fd(it.iterator))
 }
 
-// Destroy destroyes the SubvolumeInfoIterator.
+// Destroy destroys the SubvolumeInfoIterator.
 func (it *SubvolumeInfoIterator) Destroy() {
 	C.btrfs_util_destroy_subvolume_iterator(it.iterator)
 	it.iterator = nil
