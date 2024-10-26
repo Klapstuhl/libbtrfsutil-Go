@@ -1,3 +1,3 @@
-module github.com/Klapstuhl/libbtrfsutil-go
+module github.com/sapphic-kitten/libbtrfsutil-go
 
 go 1.19
