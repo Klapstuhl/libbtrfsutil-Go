@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Jan-Oliver Rettig
+ * Copyright (C) 2022 Jana Marlou Rettig
  *
  * This file is part of libbtrfsutil-go.
  *
